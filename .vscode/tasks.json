@@ -1,0 +1,39 @@
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: g++.exe сборка активного файла",
+            "command": "C:/mingw64/bin/g++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "${workspaceRoot}/src/*.cpp",
+                "${workspaceRoot}/./dependencies/glad/src/glad.c",
+
+                "-I${workspaceRoot}/include",
+
+                "--std=c++11",
+
+                "-I${workspaceRoot}/./dependencies/GLFW/include",
+                "-L${workspaceRoot}/./dependencies/GLFW/lib-mingw-w64",
+                "-I${workspaceFolder}/./dependencies/glad/include",
+                "-static",
+                "-lopengl32",
+                "-lglfw3dll",
+                "-o",
+                "${workspaceRoot}/${workspaceFolderBasename}.exe"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Задача создана отладчиком."
+        }
+    ],
+    "version": "2.0.0"
+}
