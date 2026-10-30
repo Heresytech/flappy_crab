@@ -21,7 +21,7 @@ target_sources(GLAD
       ./dependencies/glad/include/glad/glad.h
 )
 
-
+#описание исходников GLFW3
 target_sources(GLFW3
   PUBLIC
     FILE_SET hdrs
@@ -33,8 +33,18 @@ target_sources(GLFW3
       ./dependencies/GLFW/include/GLFW/glfw3native.h
 )
 
+
 #создание исполняемого файла с указанием исходника main.cpp
 add_executable(flappy_crab_app ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp) 
+
+#автоматическое добавление файла динамической библиотеки
+#glfw3 в папку build для исполняемого файла
+add_custom_command(
+  TARGET flappy_crab_app
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND}
+  ARGS -E copy  ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/GLFW/lib-mingw-w64/glfw3.dll  ${CMAKE_CURRENT_SOURCE_DIR}/build
+  )
 
 #прописываем путь для линкующихся библиотек отдельным флагом
 target_link_options(flappy_crab_app PUBLIC  -L${CMAKE_CURRENT_SOURCE_DIR}/dependencies/GLFW/lib-mingw-w64/  )
