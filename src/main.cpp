@@ -3,22 +3,27 @@
 #include<GLFW/glfw3.h>
 #include<cmath>
 
-// исходный код вершинного шейдера
-const char* vertexShaderSource = "#version 330 core\n"
-"layout (location = 0) in vec4 aPos;\n"
-"void main()\n"
-"{\n"
-"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-"}\0";
-//фрагментный шейдер(отвечает за цвета)
-const char* fragmentShaderSource = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"void main()\n"
-"{\n"
-"   FragColor = vec4(0.2f, 0.3f, 0.02f, 1.0f);\n"
-"}\n\0";
+#include "shaderClass.h"
+#include "VAO.h"
+#include "VBO.h"
+#include "EBO.h"
 
 
+// координаты вершин прямоугольника
+GLfloat vertices[] =
+	{
+		-0.5f, -0.5f, 0.0f, // нижний левый угол
+		-0.5f, 0.5f, 0.0f,	// верхний левый угол
+		0.5f, 0.5f, 0.0f,	// верхний правый угол
+		0.5f, -0.5f, 0.0f	// нижний правый угол
+    };
+
+//индексный буфер(показывает, в каком порядке отрисовывать вершины из массива vertices)
+GLuint indices[] =
+	{
+		0, 1, 3,
+		1, 2, 3
+	};
 
 int main()
 {
@@ -50,84 +55,18 @@ int main()
 	// указываем вид камеры
 	// в это случае координаты камеры x = 0, y = 0, to x = 800, y = 800
 	glViewport(0, 0, 800, 800);
-
-
-
-	// создаем объект вершинного шейдера
-	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	// соединение  объекта вершинного шейдера с исходным кодом вершинного шейдера
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	// компиляция вершинного шейдера
-	glCompileShader(vertexShader);
-
-	// создание фрагментного шейдера
-	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	// соединение фрагментного шейдера  с исходным кодом фрагментного шейдера
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-	// компиляция фрагментного шейдера
-	glCompileShader(fragmentShader);
-
-	// создание шейдерной программы
-	GLuint shaderProgram = glCreateProgram();
-	// соединение фргаментного и вершинного шейдера с шйедерной программой
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	// линковка всех шейдеров в одну шейдерную программу
-	glLinkProgram(shaderProgram);
-
-	// удаление ненужных теперь шейдеров из памяти
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-
-
-
-	// координаты вершин прямоугольника
-	GLfloat vertices[] =
-	{
-		-0.5f, -0.5f, 0.0f, // нижний левый угол
-		-0.5f, 0.5f, 0.0f, // верхний левый угол
-		0.5f, 0.5f, 0.0f, // верхний правый угол
-		0.5f, -0.5f, 0.0f // нижний правый угол
-	};
     
-	//индексный буфер(показывает, в каком порядке отрисовывать вершины из массива vertices)
-    GLuint indices[] = 
-	{
-		0, 1, 3,
-		1, 2, 3
-	};
-
-	// создание контейнеров ссылок(?) для объекта вершинного массива, объекта вершинного буфера и индексного буфера
-	GLuint VAO, VBO, EBO;
-
-	// генерация объектов для вершинного массива и вершинного буфера
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-
-	// Make the VAO the current Vertex Array Object by binding it
-	glBindVertexArray(VAO);
-
-	// Bind the VBO specifying it's a GL_ARRAY_BUFFER
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	// Introduce the vertices into the VBO
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	Shader shaderProgram("Shaders/default.vert", "Shaders/default.frag");
+    VAO VAO1;
+    VAO1.Bind();
     
+	VBO VBO1(vertices, sizeof(vertices));
+	EBO EBO1(indices, sizeof(indices));
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	// Configure the Vertex Attribute so that OpenGL knows how to read the VBO
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-	// Enable the Vertex Attribute so that OpenGL knows to use it
-	glEnableVertexAttribArray(0);
-
-	// Bind both the VBO and VAO to 0 so that we don't accidentally modify the VAO and VBO we created
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-     
-
+	VAO1.LinkVBO(VBO1, 0);
+	VAO1.Unbind();
+	VBO1.Unbind();
+    EBO1.Unbind();
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -136,9 +75,9 @@ int main()
 		// Clean the back buffer and assign the new color to it
 		glClear(GL_COLOR_BUFFER_BIT);
 		// Tell OpenGL which Shader Program we want to use
-		glUseProgram(shaderProgram);
+		shaderProgram.Activate();
 		// Bind the VAO so OpenGL knows to use it
-		glBindVertexArray(VAO);
+		VAO1.Bind();
 		// Draw the triangle using the GL_TRIANGLES primitive
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		// Swap the back buffer with the front buffer
@@ -150,10 +89,10 @@ int main()
 
 
 	// Delete all the objects we've created
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
-	glDeleteBuffers(1, &EBO);
-	glDeleteProgram(shaderProgram);
+	VAO1.Delete();
+	VBO1.Delete();
+	EBO1.Delete();
+	shaderProgram.Delete();
 	// Delete window before ending the program
 	glfwDestroyWindow(window);
 	// Terminate GLFW before ending the program
