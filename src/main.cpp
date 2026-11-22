@@ -2,14 +2,13 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <cmath>
-#include <filesystem>
+#include "stb_image.h"
 #include "shaderClass.h"
 #include "VAO.h"
 #include "VBO.h"
 #include "EBO.h"
 
-GLint gScaleLocation;
-// координаты вершин прямоугольника
+// координаты вершин прямоугольника(два треугольника)
 GLfloat vertices[] =
 	{
 		-0.5f, -0.5f, 0.0f, // нижний левый угол
@@ -54,20 +53,44 @@ int main()
 	// указываем вид камеры
 	// в это случае координаты камеры x = 0, y = 0, to x = 800, y = 800
 	glViewport(0, 0, 800, 800);
-
+    
+	//класс шейдерной программы
 	Shader shaderProgram("Shaders/default.vert", "Shaders/default.frag");
+
+	// генерация объекта вершинного массива
 	VAO VAO1;
-	VBO VBO1;
-	EBO EBO1;
 	VAO1.Bind();
-	VBO1 = VBO(vertices, sizeof(vertices));
-	EBO1 = EBO(indices, sizeof(indices));
 
-	VAO1.LinkVBO(VBO1, 0);
+	//  генерация объекта вершинного буфера и соединение его с вершинами
+	VBO VBO1(vertices, sizeof(vertices));
+	// генерация объекта буфера элементов и соединение его с масивом индексов
+	EBO EBO1(indices, sizeof(indices));
 
+	
+	// Unbind all to prevent accidentally modifying them
 	VAO1.Unbind();
 	VBO1.Unbind();
 	EBO1.Unbind();
+    
+	//нахождение индекса формы(переменной в шейдере) gScale
+    GLint gScaleLocation = glGetUniformLocation(shaderProgram.ID, "gScale");
+    
+    //Текстура
+    int widthImg, heightImg, numColCh;
+	unsigned char* bytes = stbi_load("Textures/pop_cat.png", &widthImg, &heightImg, &numColCh, 0);
+
+	GLuint texture;
+	glGenTextures(1, &texture);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+    
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, widthImg, heightImg, 0, GL_RGBA, GL_UNSIGNED_BYTE, bytes);
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -75,7 +98,7 @@ int main()
 		// Clean the back buffer and assign the new color to it
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		gScaleLocation = glGetUniformLocation(shaderProgram.ID, "gScale");
+		//gScaleLocation = glGetUniformLocation(shaderProgram.ID, "gScale");
 
 		static float Scale = 0.0f;
 		static float Delta = 0.001f;
@@ -85,7 +108,7 @@ int main()
 		{
 			Delta *= -1.0f;
 		}
-
+        
 		glUniform1f(gScaleLocation, Scale);
 
 		// Tell OpenGL which Shader Program we want to use
