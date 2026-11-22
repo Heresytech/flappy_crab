@@ -1,14 +1,14 @@
-#include<iostream>
-#include<glad/glad.h>
-#include<GLFW/glfw3.h>
-#include<cmath>
-
+#include <iostream>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include <cmath>
+#include <filesystem>
 #include "shaderClass.h"
 #include "VAO.h"
 #include "VBO.h"
 #include "EBO.h"
 
-
+GLint gScaleLocation;
 // координаты вершин прямоугольника
 GLfloat vertices[] =
 	{
@@ -16,14 +16,13 @@ GLfloat vertices[] =
 		-0.5f, 0.5f, 0.0f,	// верхний левый угол
 		0.5f, 0.5f, 0.0f,	// верхний правый угол
 		0.5f, -0.5f, 0.0f	// нижний правый угол
-    };
+};
 
-//индексный буфер(показывает, в каком порядке отрисовывать вершины из массива vertices)
+// индексный буфер(показывает, в каком порядке отрисовывать вершины из массива vertices)
 GLuint indices[] =
 	{
 		0, 1, 3,
-		1, 2, 3
-	};
+		1, 2, 3};
 
 int main()
 {
@@ -39,7 +38,7 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// создаем окно GLFW 800x800 пикселей
-	GLFWwindow* window = glfwCreateWindow(800, 800, "flappy_crab", NULL, NULL);
+	GLFWwindow *window = glfwCreateWindow(800, 800, "flappy_crab", NULL, NULL);
 	// проверка на ошибки в создании окна
 	if (window == NULL)
 	{
@@ -50,30 +49,45 @@ int main()
 	// загружаем окно в контекст
 	glfwMakeContextCurrent(window);
 
-	//загружаем GLAD, конфигурирующую OpenGL
+	// загружаем GLAD, конфигурирующую OpenGL
 	gladLoadGL();
 	// указываем вид камеры
 	// в это случае координаты камеры x = 0, y = 0, to x = 800, y = 800
 	glViewport(0, 0, 800, 800);
-    
+
 	Shader shaderProgram("Shaders/default.vert", "Shaders/default.frag");
-    VAO VAO1;
-    VAO1.Bind();
-    
-	VBO VBO1(vertices, sizeof(vertices));
-	EBO EBO1(indices, sizeof(indices));
+	VAO VAO1;
+	VBO VBO1;
+	EBO EBO1;
+	VAO1.Bind();
+	VBO1 = VBO(vertices, sizeof(vertices));
+	EBO1 = EBO(indices, sizeof(indices));
 
 	VAO1.LinkVBO(VBO1, 0);
+
 	VAO1.Unbind();
 	VBO1.Unbind();
-    EBO1.Unbind();
+	EBO1.Unbind();
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
-		// Specify the color of the background
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 		// Clean the back buffer and assign the new color to it
 		glClear(GL_COLOR_BUFFER_BIT);
+        
+		gScaleLocation = glGetUniformLocation(shaderProgram.ID, "gScale");
+
+		static float Scale = 0.0f;
+		static float Delta = 0.001f;
+
+		Scale += Delta;
+		if ((Scale >= 1.0f) || (Scale <= -1.0f))
+		{
+			Delta *= -1.0f;
+		}
+
+		glUniform1f(gScaleLocation, Scale);
+
 		// Tell OpenGL which Shader Program we want to use
 		shaderProgram.Activate();
 		// Bind the VAO so OpenGL knows to use it
@@ -84,11 +98,10 @@ int main()
 		glfwSwapBuffers(window);
 		// Take care of all GLFW events
 		glfwPollEvents();
+
+		// Specify the color of the background
 	}
 
-
-
-	// Delete all the objects we've created
 	VAO1.Delete();
 	VBO1.Delete();
 	EBO1.Delete();

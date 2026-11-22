@@ -1,5 +1,7 @@
 #include"shaderClass.h"
-
+#include <stdexcept>
+#include <cstring>
+#include <cerrno>
 // Reads a text file and outputs a string with everything in the text file
 std::string get_file_contents(const char* filename)
 {
@@ -14,7 +16,7 @@ std::string get_file_contents(const char* filename)
 		in.close();
 		return(contents);
 	}
-	throw(errno);
+	throw std::runtime_error(std::string("Не удалось открыть файл '") + filename + "': " + std::strerror(errno));
 }
 
 // Constructor that build the Shader Program from 2 different shaders
