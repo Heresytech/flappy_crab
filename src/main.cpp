@@ -74,7 +74,7 @@ int main()
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 		// Clean the back buffer and assign the new color to it
 		glClear(GL_COLOR_BUFFER_BIT);
-        
+
 		gScaleLocation = glGetUniformLocation(shaderProgram.ID, "gScale");
 
 		static float Scale = 0.0f;

@@ -10,14 +10,14 @@ add_library(GLFW3 INTERFACE) #создание цели библиотеки GLF
 
 add_library(ORGANISED)
 
-#создание цели со всеми бибилиотеками, упрощающими в-действие с OPENGL
+#создание цели со всеми бибилиотеками, упрощающими в-действие с OPENGL(+библиотека для загрузки изображений STB)
 target_sources(ORGANISED
   PUBLIC
      ${CMAKE_CURRENT_SOURCE_DIR}/src/VAO.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/src/VBO.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/src/EBO.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/src/shaderClass.cpp
-
+     ${CMAKE_CURRENT_SOURCE_DIR}/src/stb.cpp
   PUBLIC
     FILE_SET new_Headers #название заголовков(чтобы применять в других целях)
     TYPE HEADERS
@@ -29,6 +29,7 @@ target_sources(ORGANISED
       ${CMAKE_CURRENT_SOURCE_DIR}/headers/VBO.h
       ${CMAKE_CURRENT_SOURCE_DIR}/headers/EBO.h
       ${CMAKE_CURRENT_SOURCE_DIR}/headers/shaderClass.h
+      ${CMAKE_CURRENT_SOURCE_DIR}/headers/stb_image.h
 )
 
 
