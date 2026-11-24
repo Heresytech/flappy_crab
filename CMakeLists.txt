@@ -87,6 +87,22 @@ add_custom_command(
   ARGS -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/Shaders"  "${CMAKE_CURRENT_SOURCE_DIR}/build/Shaders"
   )
 
+  #автоматическое добавление папки с текстурами в папку с исполняемым файлом
+add_custom_command(
+  TARGET flappy_crab_app
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND}
+  ARGS -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/build/Textures" 
+  )
+
+add_custom_command(
+  TARGET flappy_crab_app
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND}
+  ARGS -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/Textures"  "${CMAKE_CURRENT_SOURCE_DIR}/build/Textures"
+  )
+
+
 
 #прописываем путь для линкующихся библиотек отдельным флагом
 target_link_options(flappy_crab_app PUBLIC  -L${CMAKE_CURRENT_SOURCE_DIR}/dependencies/GLFW/lib-mingw-w64/  )
