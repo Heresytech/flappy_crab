@@ -8,20 +8,22 @@
 #include "VBO.h"
 #include "EBO.h"
 
-// координаты вершин прямоугольника(два треугольника)
+// Vertices coordinates
 GLfloat vertices[] =
 	{
-		-0.5f, -0.5f, 0.0f, // нижний левый угол
-		-0.5f, 0.5f, 0.0f,	// верхний левый угол
-		0.5f, 0.5f, 0.0f,	// верхний правый угол
-		0.5f, -0.5f, 0.0f	// нижний правый угол
+		//     COORDINATES     /        COLORS      /   TexCoord  //
+		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Lower left corner
+		-0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,  // Upper left corner
+		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,	  // Upper right corner
+		0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f	  // Lower right corner
 };
 
-// индексный буфер(показывает, в каком порядке отрисовывать вершины из массива vertices)
+// Indices for vertices order
 GLuint indices[] =
 	{
-		0, 1, 3,
-		1, 2, 3};
+		0, 2, 1, // Upper triangle
+		0, 3, 2	 // Lower triangle
+};
 
 int main()
 {
@@ -53,8 +55,8 @@ int main()
 	// указываем вид камеры
 	// в это случае координаты камеры x = 0, y = 0, to x = 800, y = 800
 	glViewport(0, 0, 800, 800);
-    
-	//класс шейдерной программы
+
+	// класс шейдерной программы
 	Shader shaderProgram("Shaders/default.vert", "Shaders/default.frag");
 
 	// генерация объекта вершинного массива
@@ -66,24 +68,27 @@ int main()
 	// генерация объекта буфера элементов и соединение его с масивом индексов
 	EBO EBO1(indices, sizeof(indices));
 
-	
+	VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 8 * sizeof(float), (void *)0);
+	VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 8 * sizeof(float), (void *)(3 * sizeof(float)));
+	VAO1.LinkAttrib(VBO1, 2, 2, GL_FLOAT, 8 * sizeof(float), (void *)(6 * sizeof(float)));
+
 	// Unbind all to prevent accidentally modifying them
 	VAO1.Unbind();
 	VBO1.Unbind();
 	EBO1.Unbind();
-    
-	//нахождение индекса формы(переменной в шейдере) gScale
-    GLint gScaleLocation = glGetUniformLocation(shaderProgram.ID, "gScale");
-    
-    //Текстура
-    int widthImg, heightImg, numColCh;
-	unsigned char* bytes = stbi_load("Textures/pop_cat.png", &widthImg, &heightImg, &numColCh, 0);
+
+
+
+	// Текстура
+	int widthImg, heightImg, numColCh;
+	stbi_set_flip_vertically_on_load(true);
+	unsigned char *bytes = stbi_load("Textures/pop_cat.png", &widthImg, &heightImg, &numColCh, STBI_rgb_alpha);
 
 	GLuint texture;
 	glGenTextures(1, &texture);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture);
-    
+
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -91,6 +96,14 @@ int main()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, widthImg, heightImg, 0, GL_RGBA, GL_UNSIGNED_BYTE, bytes);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	stbi_image_free(bytes);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	GLuint tex0Uni = glGetUniformLocation(shaderProgram.ID, "tex0");
+	shaderProgram.Activate();
+	glUniform1i(tex0Uni, 0);
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -98,22 +111,12 @@ int main()
 		// Clean the back buffer and assign the new color to it
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		//gScaleLocation = glGetUniformLocation(shaderProgram.ID, "gScale");
-
-		static float Scale = 0.0f;
-		static float Delta = 0.001f;
-
-		Scale += Delta;
-		if ((Scale >= 1.0f) || (Scale <= -1.0f))
-		{
-			Delta *= -1.0f;
-		}
-        
-		glUniform1f(gScaleLocation, Scale);
+		
 
 		// Tell OpenGL which Shader Program we want to use
 		shaderProgram.Activate();
 		// Bind the VAO so OpenGL knows to use it
+		glBindTexture(GL_TEXTURE_2D, texture);
 		VAO1.Bind();
 		// Draw the triangle using the GL_TRIANGLES primitive
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -128,6 +131,7 @@ int main()
 	VAO1.Delete();
 	VBO1.Delete();
 	EBO1.Delete();
+	glDeleteTextures(1, &texture);
 	shaderProgram.Delete();
 	// Delete window before ending the program
 	glfwDestroyWindow(window);
