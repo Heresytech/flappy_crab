@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.29.3)
 project(flappy_crab)
 
 #создание бибилиотеки GLAD
-add_library(GLAD)
+add_library(GLAD STATIC)
 #создание библиотеки GLFW3
 add_library(GLFW3 INTERFACE) #создание цели библиотеки GLFW3 (interface, т.к в библиотеке нет файлов  .c)
 
@@ -49,7 +49,7 @@ target_sources(GLAD
 
 #описание исходников GLFW3
 target_sources(GLFW3
-  PUBLIC
+  INTERFACE
     FILE_SET hdrs
     TYPE HEADERS
     BASE_DIRS
@@ -57,6 +57,7 @@ target_sources(GLFW3
     FILES
       ./dependencies/GLFW/include/GLFW/glfw3.h
       ./dependencies/GLFW/include/GLFW/glfw3native.h
+      
 )
 
 
@@ -69,47 +70,19 @@ add_custom_command(
   TARGET flappy_crab_app
   POST_BUILD
   COMMAND ${CMAKE_COMMAND}
-  ARGS -E copy  ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/GLFW/lib-mingw-w64/glfw3.dll  ${CMAKE_CURRENT_SOURCE_DIR}/build
-  )
-
-#автоматическое добавление папки с шейдерами в папку с исполняемым файлом
-add_custom_command(
-  TARGET flappy_crab_app
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND}
-  ARGS -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/build/Shaders" 
-  )
-
-add_custom_command(
-  TARGET flappy_crab_app
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND}
-  ARGS -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/Shaders"  "${CMAKE_CURRENT_SOURCE_DIR}/build/Shaders"
-  )
-
-  #автоматическое добавление папки с текстурами в папку с исполняемым файлом
-add_custom_command(
-  TARGET flappy_crab_app
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND}
-  ARGS -E make_directory "${CMAKE_CURRENT_SOURCE_DIR}/build/Textures" 
-  )
-
-add_custom_command(
-  TARGET flappy_crab_app
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND}
-  ARGS -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/Textures"  "${CMAKE_CURRENT_SOURCE_DIR}/build/Textures"
+  ARGS -E copy  "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/GLFW/lib-mingw-w64/glfw3.dll"  "$<TARGET_FILE_DIR:flappy_crab_app>"
   )
 
 
+# Копирование шейдеров и текстур в реальную папку сборки ($<TARGET_FILE_DIR:...>)
+add_custom_command(TARGET flappy_crab_app POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_CURRENT_SOURCE_DIR}/Shaders" "$<TARGET_FILE_DIR:flappy_crab_app>/Shaders"
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_CURRENT_SOURCE_DIR}/Textures" "$<TARGET_FILE_DIR:flappy_crab_app>/Textures"
+)
 
 #прописываем путь для линкующихся библиотек отдельным флагом
-target_link_options(flappy_crab_app PUBLIC  -L${CMAKE_CURRENT_SOURCE_DIR}/dependencies/GLFW/lib-mingw-w64/  )
+target_link_options(GLFW3 INTERFACE  -L${CMAKE_CURRENT_SOURCE_DIR}/dependencies/GLFW/lib-mingw-w64/)
 #линкуем файл приложения с библиотеками
 target_link_libraries(flappy_crab_app PUBLIC ORGANISED GLFW3 GLAD opengl32 glfw3dll)
-
-
-
-
-
