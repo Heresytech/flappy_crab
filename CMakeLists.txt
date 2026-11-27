@@ -8,6 +8,11 @@ add_library(GLAD STATIC)
 #создание библиотеки GLFW3
 add_library(GLFW3 INTERFACE) #создание цели библиотеки GLFW3 (interface, т.к в библиотеке нет файлов  .c)
 
+#создание библиотеки glm для мат. операций в opengl
+add_library(glm INTERFACE) #создание цели библиотеки GLFW3 (interface, т.к в библиотеке нет файлов  .c)
+
+target_include_directories(glm INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/glm)
+
 add_library(ORGANISED)
 
 #создание цели со всеми бибилиотеками, упрощающими в-действие с OPENGL(+библиотека для загрузки изображений STB)
@@ -85,4 +90,4 @@ add_custom_command(TARGET flappy_crab_app POST_BUILD
 #прописываем путь для линкующихся библиотек отдельным флагом
 target_link_options(GLFW3 INTERFACE  -L${CMAKE_CURRENT_SOURCE_DIR}/dependencies/GLFW/lib-mingw-w64/)
 #линкуем файл приложения с библиотеками
-target_link_libraries(flappy_crab_app PUBLIC ORGANISED GLFW3 GLAD opengl32 glfw3dll)
+target_link_libraries(flappy_crab_app PUBLIC ORGANISED GLFW3 GLAD opengl32 glfw3dll glm)
