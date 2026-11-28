@@ -9,7 +9,7 @@ add_library(GLAD STATIC)
 add_library(GLFW3 INTERFACE) #создание цели библиотеки GLFW3 (interface, т.к в библиотеке нет файлов  .c)
 
 #создание библиотеки glm для мат. операций в opengl
-add_library(glm INTERFACE) #создание цели библиотеки GLFW3 (interface, т.к в библиотеке нет файлов  .c)
+add_library(glm INTERFACE) #создание цели библиотеки glm (interface, т.к в библиотеке нет файлов  .c)
 
 target_include_directories(glm INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/glm)
 
@@ -23,6 +23,7 @@ target_sources(ORGANISED
      ${CMAKE_CURRENT_SOURCE_DIR}/src/EBO.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/src/shaderClass.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/src/stb.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture.cpp
   PUBLIC
     FILE_SET new_Headers #название заголовков(чтобы применять в других целях)
     TYPE HEADERS
@@ -35,6 +36,7 @@ target_sources(ORGANISED
       ${CMAKE_CURRENT_SOURCE_DIR}/headers/EBO.h
       ${CMAKE_CURRENT_SOURCE_DIR}/headers/shaderClass.h
       ${CMAKE_CURRENT_SOURCE_DIR}/headers/stb_image.h
+      ${CMAKE_CURRENT_SOURCE_DIR}/headers/Texture.h
 )
 
 
@@ -64,6 +66,7 @@ target_sources(GLFW3
       ./dependencies/GLFW/include/GLFW/glfw3native.h
       
 )
+target_link_directories(GLFW3 INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/GLFW/lib-mingw-w64/)
 
 
 #создание исполняемого файла с указанием исходника main.cpp
@@ -87,7 +90,6 @@ add_custom_command(TARGET flappy_crab_app POST_BUILD
     "${CMAKE_CURRENT_SOURCE_DIR}/Textures" "$<TARGET_FILE_DIR:flappy_crab_app>/Textures"
 )
 
-#прописываем путь для линкующихся библиотек отдельным флагом
-target_link_options(GLFW3 INTERFACE  -L${CMAKE_CURRENT_SOURCE_DIR}/dependencies/GLFW/lib-mingw-w64/)
+
 #линкуем файл приложения с библиотеками
 target_link_libraries(flappy_crab_app PUBLIC ORGANISED GLFW3 GLAD opengl32 glfw3dll glm)
